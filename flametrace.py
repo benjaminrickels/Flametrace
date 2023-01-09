@@ -70,10 +70,19 @@ def exec_slice_to_rectangle(exec_slice, begin):
         thread_name = f' ({thread_name})'
 
     r = draw_svg.Rectangle(x, y, width, height, fill=fill, stroke='black', stroke_width='0.2')
+
+    s_type = exec_slice['type']
+    slice_id = exec_slice.get('slice_id', 'N/A')
+    parent = exec_slice.get('parent', 'N/A')
+    depth = exec_slice.get('depth', 'N/A')
     r.appendTitle(f'{function_name}{thread_uid}{thread_name}\n'
+                  f'Type: {s_type}\n'
                   f'Begin: {slice_begin:,} ps\n'
                   f'End: {slice_end:,}ps \n'
-                  f'Duration: {slice_duration:,} ps ({(slice_duration/500):,} cycles)')
+                  f'Duration: {slice_duration:,} ps ({(slice_duration/500):,} cycles)\n'
+                  f'Slice ID: {slice_id}\n'
+                  f'Parent: {parent}\n'
+                  f'Depth: {depth}')
 
     return r
 
