@@ -23,9 +23,7 @@
                 .width(window.innerWidth - 40)
                 // .height(200)
                 .minFrameSize(0)
-                .label(function (d) {
-                    return d.data.name + " -- " + numberWithCommas(d.value) + "ps";
-                });
+                .label(function (d) { return d.data.name + " -- " + numberWithCommas(d.value) + "ps"; });
         }
 
         buildCharts();
@@ -69,6 +67,7 @@
             for (thread in threads) {
                 var slices; // = document.getElementsByThreadId(thread)
                 for (slice in slices) {
+                    // do this in g('rect') instead
                     slice.childNodes[0].fill
                         = `rgb(${colors[colorindex][0]},${colors[colorindex][1]},${colors[colorindex][2]})`;
                 }
