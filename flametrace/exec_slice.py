@@ -72,7 +72,7 @@ def _grouped_slices(fun_slices):
     slices_by_thread_uid = groupby_sorted(fun_slices, group_key=itemgetter(
         'thread_uid'), sort_key=lambda x: str(x['thread_uid']))
     for thread_uid, thread_slices in slices_by_thread_uid.items():
-        slices_by_depth = groupby_sorted(thread_slices, key=itemgetter('depth'))
+        slices_by_depth = groupby_sorted(thread_slices, key=lambda slce: slce.get('depth', -1))
         for depth, depth_slices in slices_by_depth.items():
             slices_time_sorted = sorted(depth_slices, key=itemgetter('begin'))
 
@@ -80,15 +80,14 @@ def _grouped_slices(fun_slices):
 
         slices_by_thread_uid[thread_uid] = slices_by_depth
 
-    print(slices_by_thread_uid)
     return slices_by_thread_uid
 
 
 def _find_parent(slce, grouped_slices):
     thread_uid = slce['thread_uid']
-    depth = slce['depth']
+    depth = slce.get('depth', -1)
 
-    if depth == 0:
+    if depth < 0:
         return
 
     candidates = grouped_slices[thread_uid][depth - 1]
@@ -119,11 +118,8 @@ def find_all(cont_seqs):
                                   group_key=cont_seq.thread_uid).items()
     slices = flatten([_find_all_of(thread_uid, cont_seqs)
                      for thread_uid, cont_seqs in seqs_by_tuid])
-    fun_slices = [slce for slce in slices if slce['type'] == 'function_slice']
-    _with_ids(fun_slices)
-    _find_parents(fun_slices)
-
-    print(slices)
+    _with_ids(slices)
+    _find_parents(slices)
 
     return slices
 
