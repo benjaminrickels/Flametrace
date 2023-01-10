@@ -80,7 +80,6 @@ def _grouped_slices(fun_slices):
 
         slices_by_thread_uid[thread_uid] = slices_by_depth
 
-    print(slices_by_thread_uid)
     return slices_by_thread_uid
 
 
