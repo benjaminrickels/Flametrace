@@ -1,0 +1,50 @@
+<head>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/d3-flame-graph@4.1.3/dist/d3-flamegraph.css">
+</head>
+
+<body onload="hideParents()">
+    <div id="chart"></div>
+    <script type="text/javascript" src="https://d3js.org/d3.v7.js"></script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/d3-flame-graph@4.1.3/dist/d3-flamegraph.min.js"></script>
+    <script type="text/javascript">
+        var chart = flamegraph()
+            .width(960);
+
+        d3.json("trace.json")
+            .then(data => {
+                d3.select("#chart")
+                    .datum(data)
+                    .call(chart);
+            }).catch(error => {
+                return console.warn(error);
+            });
+
+        function hideParents() {
+            var parents = document.getElementsByName("parent");
+
+            for (parent in parents) {
+                parent.style.display = "none";
+            }
+        }
+
+        function colorByThread() {
+            var threads = [0, 1, 2];
+            var colors = [[0, 186, 255], [11, 95, 217], [0, 20, 240], [62, 11, 217], [150, 0, 255],
+            [221, 0, 255], [217, 11, 141], [240, 1, 5], [217, 47, 11], [255, 90, 0],
+            [255, 131, 0], [217, 147, 11], [240, 188, 0], [217, 197, 11], [230, 255, 0],
+            [133, 255, 0], [31, 217, 11], [0, 240, 65], [11, 217, 137], [0, 255, 244]];
+            colorindex = 0;
+
+            for (thread in threads) {
+                var slices; // = document.getElementsByThreadId(thread)
+                for (slice in slices) {
+                    slice.childNodes[0].fill
+                        = `rgb(${colors[colorindex][0]},${colors[colorindex][1]},${colors[colorindex][2]})`;
+                }
+                colorindex = (colorindex + 1) % colors.length;
+            }
+        }
+    </script>
+</body>
