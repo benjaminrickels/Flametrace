@@ -16,14 +16,21 @@
     <script type="text/javascript" src="node_modules/d3-flame-graph/dist/d3-flamegraph.js"></script>
     <script type="text/javascript">
         const nproc = 8;
+        const clockGHz = 2;
         var charts = []
+
+        const format = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
 
         for (const core of Array(nproc).keys()) {
             charts[core] = flamegraph()
                 .width(window.innerWidth - 40)
                 // .height(200)
                 .minFrameSize(0)
-                .label(function (d) { return d.data.name + " -- " + numberWithCommas(d.value) + "ps"; });
+                .label(function (d) {
+                    return d.data.name + "\n" + numberWithCommas(d.value) + "ps\n" +
+                        numberWithCommas(d.value / 1000 * clockGHz) + " cycles\n" +
+                        '(' + format.format(100 * (d.x1 - d.x0)) + '%)';
+                });
         }
 
         buildCharts();
@@ -54,25 +61,6 @@
 
         function numberWithCommas(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        function colorByThread() {
-            var threads = [0, 1, 2];
-            var colors = [[0, 186, 255], [11, 95, 217], [0, 20, 240], [62, 11, 217], [150, 0, 255],
-            [221, 0, 255], [217, 11, 141], [240, 1, 5], [217, 47, 11], [255, 90, 0],
-            [255, 131, 0], [217, 147, 11], [240, 188, 0], [217, 197, 11], [230, 255, 0],
-            [133, 255, 0], [31, 217, 11], [0, 240, 65], [11, 217, 137], [0, 255, 244]];
-            colorindex = 0;
-
-            for (thread in threads) {
-                var slices; // = document.getElementsByThreadId(thread)
-                for (slice in slices) {
-                    // do this in g('rect') instead
-                    slice.childNodes[0].fill
-                        = `rgb(${colors[colorindex][0]},${colors[colorindex][1]},${colors[colorindex][2]})`;
-                }
-                colorindex = (colorindex + 1) % colors.length;
-            }
         }
     </script>
 </body>
