@@ -6,6 +6,7 @@ from operator import itemgetter
 import drawSvg as draw_svg
 
 import flametrace.continuous_sequence as continuous_sequence
+import flametrace.d3 as d3
 import flametrace.exec_slice as exec_slice
 import flametrace.trace_entry as trace_entry
 import flametrace.tracefile as tracefile
@@ -112,72 +113,6 @@ def per_cpu_exec_to_svg(e_slices):
         svg.saveSvg(f'flamegraph-core{cpu_id}.svg')
 
 
-def slice_to_json(slce, slices):
-    slice_id = slce['slice_id']
-    curr_timestamp = slce['begin']
-
-    children = [slce for slce in slices if slce.get('parent') == slice_id]
-    json_children = []
-    for child in children:
-        delta = child['begin'] - curr_timestamp
-
-        if delta > 0:
-            json_children.append({'name': 'HIDEME',
-                                  'value': delta})
-        curr_timestamp = child['begin']
-
-        json_child = slice_to_json(child, slices)
-        json_children.append(json_child)
-
-        curr_timestamp = child['end']
-
-    function_name = slce.get('function_name', None)
-    function_name = f': {function_name}' if function_name else ''
-
-    thread_uid = slce['thread_uid']
-
-    name = f'{thread_uid}{function_name}'
-
-    return {'name': name,
-            'value': slce['end'] - slce['begin'],
-            'thread_uid': slce['thread_uid'],
-            'children': json_children}
-
-
-def slices_to_json(slices):
-    slices_by_cpu = groupby_sorted(slices, itemgetter('cpu_id'))
-
-    max_time = max(slices, key=itemgetter('end'))['end']
-    min_time = min(slices, key=itemgetter('begin'))['begin']
-
-    for cpu_id, cpu_slices in slices_by_cpu.items():
-        cpu_slices = sorted(cpu_slices, key=itemgetter('begin'))
-        top_level_slices = [slce for slce in cpu_slices if 'parent' not in slce]
-
-        curr_timestamp = min_time
-
-        children = []
-        for slce in top_level_slices:
-            delta = slce['begin'] - curr_timestamp
-
-            if delta > 0:
-                children.append({'name': 'HIDEME',
-                                 'value': delta})
-
-            json_slce = slice_to_json(slce, cpu_slices)
-            children.append(json_slce)
-
-            curr_timestamp = slce['end']
-
-        root_delta = max_time - min_time
-        trace_json = {'name': f'core{cpu_id}',
-                      'value': root_delta,
-                      'children': children}
-
-        with open(f'trace-cpu-{cpu_id}.json', 'w') as f:
-            json.dump(trace_json, f)
-
-
 def main():
     parser = ArgumentParser()
     parser.add_argument('tracefile', nargs='?', default='Trace.txt')
@@ -196,7 +131,7 @@ def main():
         slices = exec_slice.find_all(c_seqs)
 
         if args.d3_fg:
-            slices_to_json(slices)
+            d3.to_json(slices)
 
         if args.svg_fg:
             per_cpu_exec_to_svg(slices)
