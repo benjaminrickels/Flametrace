@@ -3,7 +3,7 @@ from operator import itemgetter
 from flametrace.util import groupby_sorted
 
 
-def _slice_seq_to_json(slice_seq, slices, begin):
+def _slice_seq_to_json(slice_seq, slices, begin, slices_by_parent):
     curr_timestamp = begin
 
     json_seq = []
@@ -15,7 +15,7 @@ def _slice_seq_to_json(slice_seq, slices, begin):
                              'value': delta})
         curr_timestamp = slce['begin']
 
-        slce_json = _slice_to_json(slce, slices)
+        slce_json = _slice_to_json(slce, slices, slices_by_parent)
         json_seq.append(slce_json)
 
         curr_timestamp = slce['end']
@@ -23,24 +23,20 @@ def _slice_seq_to_json(slice_seq, slices, begin):
     return json_seq
 
 
-def _slice_children(slce, slices):
-    return [other for other in slices if other.get('parent') == slce['slice_id']]
-
-
-def _slice_children_to_json(slce, slices):
+def _slice_children_to_json(slce, slices, slices_by_parent):
     begin = slce['begin']
-    children = _slice_children(slce, slices)
-    return _slice_seq_to_json(children, slices, begin)
+    children = slices_by_parent.get(slce['slice_id'], [])
+    return _slice_seq_to_json(children, slices, begin, slices_by_parent)
 
 
-def _slice_to_json(slce, slices):
+def _slice_to_json(slce, slices, slices_py_parent):
     function_name = slce.get('function_name', None)
     function_name = f': {function_name}' if function_name else ''
 
     thread_uid = slce['thread_uid']
     name = f'{thread_uid}{function_name}'
 
-    children = _slice_children_to_json(slce, slices)
+    children = _slice_children_to_json(slce, slices, slices_py_parent)
 
     return {'name': name,
             'value': slce['end'] - slce['begin'],
@@ -58,8 +54,10 @@ def _min_max_time(slices):
 def _cpu_slices_to_json(cpu_id, cpu_slices, min_max_time):
     min_time, max_time = min_max_time
 
-    top_level_slices = [slce for slce in cpu_slices if 'parent' not in slce]
-    json_children = _slice_seq_to_json(top_level_slices, cpu_slices, min_time)
+    slices_by_parent = groupby_sorted(cpu_slices, key=lambda slce: slce.get('parent', -1))
+
+    top_level_slices = slices_by_parent[-1]
+    json_children = _slice_seq_to_json(top_level_slices, cpu_slices, min_time, slices_by_parent)
 
     root_delta = max_time - min_time
     return {'name': f'core{cpu_id}',
