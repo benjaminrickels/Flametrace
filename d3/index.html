@@ -27,7 +27,8 @@
                 // .height(200)
                 .minFrameSize(0)
                 .label(function (d) {
-                    return d.data.name + "\n" + numberWithCommas(d.value) + "ps\n" +
+                    return d.data.name + "\n" +
+                        numberWithCommas(d.value) + "ps\n" +
                         numberWithCommas(d.value / 1000 * clockGHz) + " cycles\n" +
                         '(' + format.format(100 * (d.x1 - d.x0)) + '%)';
                 });
