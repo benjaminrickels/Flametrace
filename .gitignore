@@ -1,2 +1,5 @@
 .vscode/
 d3/node_modules/
+*.json
+*.svg
+*.txt
