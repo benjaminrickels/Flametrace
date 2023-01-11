@@ -1,4 +1,5 @@
 from operator import itemgetter
+import bisect
 
 import flametrace.continuous_sequence as cont_seq
 import flametrace.trace_entry as trace_entry
@@ -91,13 +92,8 @@ def _find_parent(slce, grouped_slices):
         return
 
     candidates = grouped_slices[thread_uid][depth - 1]
-    i = 0
-    for candidate in candidates:
-        if candidate['begin'] > slce['begin']:
-            break
 
-        i += 1
-
+    i = bisect.bisect_right([candidate['begin'] for candidate in candidates], slce['begin'])
     slce['parent'] = candidates[i-1]['slice_id']
 
 
