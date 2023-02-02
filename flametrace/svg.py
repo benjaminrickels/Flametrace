@@ -5,7 +5,7 @@ import drawSvg as draw_svg
 
 import flametrace.exec_slice as exec_slice
 import flametrace.trace_entry as trace_entry
-from flametrace.util import groupby_sorted
+from flametrace.util import groupby_sorted, ps_to_cycles
 
 SVG_X_SCALE = 100 * 1e3
 SVG_Y_UNIT = 100
@@ -77,7 +77,7 @@ def exec_slice_to_rectangle(exec_slice, begin):
                   f'Type: {s_type}\n'
                   f'Begin: {slice_begin:,} ps\n'
                   f'End: {slice_end:,}ps \n'
-                  f'Duration: {slice_duration:,} ps ({(slice_duration/500):,} cycles)\n'
+                  f'Duration: {ps_to_cycles(slice_duration):,} cycles ({slice_duration:,} ps)\n'
                   f'Slice ID: {slice_id}\n'
                   f'Parent: {parent}\n'
                   f'Depth: {depth}')

@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+import flametrace.config as config
 import flametrace.continuous_sequence as continuous_sequence
 import flametrace.d3 as d3
 import flametrace.exec_slice as exec_slice
@@ -24,8 +25,11 @@ def main():
     parser.add_argument('--stats-json', action='store_true',
                         help='Generate a JSON file containing function stats')
 
+    parser.add_argument('--cpu-ghz', action='store', type=float, default=2.0)
+
     args = parser.parse_args()
 
+    config.CPU_GHZ = args.cpu_ghz
     exec_slice.ignore_funs('registerThread', 'unregisterThread', 'start_pthread')
 
     with open(args.tracefile) as tf:

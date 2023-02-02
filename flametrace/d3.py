@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from flametrace.util import groupby_sorted
+from flametrace.util import groupby_sorted, ps_to_cycles
 
 
 def _slice_seq_to_json(slice_seq, slices, begin, slices_by_parent):
@@ -12,6 +12,7 @@ def _slice_seq_to_json(slice_seq, slices, begin, slices_by_parent):
 
         if delta > 0:
             json_seq.append({'name': 'HIDEME',
+                             'cycles': ps_to_cycles(delta),
                              'value': delta})
         curr_timestamp = slce['begin']
 
@@ -38,8 +39,10 @@ def _slice_to_json(slce, slices, slices_py_parent):
 
     children = _slice_children_to_json(slce, slices, slices_py_parent)
 
+    value = slce['end'] - slce['begin']
     return {'name': name,
-            'value': slce['end'] - slce['begin'],
+            'value': value,
+            'cycles': ps_to_cycles(value),
             'thread_uid': slce['thread_uid'],
             'children': children}
 
@@ -62,6 +65,7 @@ def _cpu_slices_to_json(cpu_id, cpu_slices, min_max_time):
     root_delta = max_time - min_time
     return {'name': f'core{cpu_id}',
             'value': root_delta,
+            'cycles': ps_to_cycles(root_delta),
             'children': json_children}
 
 
