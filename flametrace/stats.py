@@ -1,5 +1,7 @@
 from operator import itemgetter
-from flametrace.util import groupby_sorted
+from flametrace.util import groupby_sorted, ps_to_cycles
+
+import flametrace.exec_slice as exec_slice
 
 
 def _halve(xs):
@@ -42,27 +44,27 @@ def _boxplot_stats(runtimes):
     q0 = filtered_rts[0]
     q4 = filtered_rts[-1]
 
-    return {'median': median,
-            'min': min,
-            'max': max,
-            'q0': q0,
-            'q1': q1,
-            'q2': q2,
-            'q3': q3,
-            'q4': q4,
-            'iqr': iqr}
+    return {'median': ps_to_cycles(median),
+            'min': ps_to_cycles(min),
+            'max': ps_to_cycles(max),
+            'q0': ps_to_cycles(q0),
+            'q1': ps_to_cycles(q1),
+            'q2': ps_to_cycles(q2),
+            'q3': ps_to_cycles(q3),
+            'q4': ps_to_cycles(q4),
+            'iqr': ps_to_cycles(iqr)}
 
 
-def _get_call_begin_and_end(call_slices):
-    begin = end = None
+def _get_call_rt(call_slices):
+    has_begin = has_end = False
+    rt = 0
 
-    for call_slice in call_slices:
-        if 'is_begin' in call_slice:
-            begin = call_slice['begin']
-        if 'is_end' in call_slice:
-            end = call_slice['end']
+    for cs in call_slices:
+        rt += exec_slice.duration(cs)
+        has_begin = has_begin or ('is_begin' in cs)
+        has_end = has_end or ('is_end' in cs)
 
-    return (begin, end)
+    return rt if has_begin and has_end else None
 
 
 def _insert_function_runtime(fun_rts, fun_name, rt):
@@ -76,11 +78,9 @@ def _get_functions_runtimes(slices_by_call_id):
     fun_rts = {}
 
     for _, call_slices in slices_by_call_id.items():
-        begin, end = _get_call_begin_and_end(call_slices)
-
-        if begin and end:
+        if rt := _get_call_rt(call_slices):
             fun_name = call_slices[0]['function_name']
-            _insert_function_runtime(fun_rts, fun_name, end - begin)
+            _insert_function_runtime(fun_rts, fun_name, rt)
 
     return fun_rts
 
