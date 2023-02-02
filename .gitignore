@@ -3,3 +3,4 @@ d3/node_modules/
 *.json
 *.svg
 *.txt
+**/.DS_Store
