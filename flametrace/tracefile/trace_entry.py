@@ -1,8 +1,3 @@
-from operator import itemgetter
-
-from flametrace.util import groupby_sorted
-
-
 def _make(trace_type, thread_id, cpu_id, timestamp, **attrs):
     trace_entry = {'trace_type': trace_type,
                    'thread_id': thread_id,
@@ -46,16 +41,24 @@ def make_sched_switch(thread_id, cpu_id, timestamp, thread_name_from, thread_id_
                  thread_name_to=thread_name_to)
 
 
-def trace_type(trace_entry):
-    return trace_entry['trace_type']
+def cpu_id(trace_entry):
+    return trace_entry['cpu_id']
+
+
+def function_name(trace_entry):
+    return trace_entry.get('function_name')
+
+
+def syscall_name(trace_entry):
+    return trace_entry.get('syscall_name')
+
+
+def call_name(trace_entry):
+    return function_name(trace_entry) or syscall_name(trace_entry)
 
 
 def thread_id(trace_entry):
     return trace_entry['thread_id']
-
-
-def cpu_id(trace_entry):
-    return trace_entry['cpu_id']
 
 
 def thread_uid(trace_entry):
@@ -69,16 +72,5 @@ def timestamp(trace_entry):
     return trace_entry['timestamp']
 
 
-def to_id(thread_uid):
-    if isinstance(thread_uid, str):
-        return 0
-    else:
-        return thread_uid
-
-
-def thread_uids(trace_entries):
-    return set(map(thread_uid, trace_entries))
-
-
-def by_cpu(trace_entries):
-    return groupby_sorted(trace_entries, key=itemgetter('cpu_id'))
+def trace_type(trace_entry):
+    return trace_entry['trace_type']

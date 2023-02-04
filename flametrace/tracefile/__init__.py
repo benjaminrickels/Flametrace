@@ -1,7 +1,8 @@
 from operator import itemgetter
 from re import match, search
 
-import flametrace.trace_entry as trace_entry
+import flametrace.tracefile.trace_entry as trace_entry
+from flametrace.util import groupby_sorted
 
 # Example: " <...>-1234  [001]  ftrace_entry: context_switch"
 TRACE_REGEX = ('^\s*<(?P<thread_info>\S*)>-(?P<thread_id>\d*)'

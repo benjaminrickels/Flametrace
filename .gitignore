@@ -4,3 +4,4 @@ d3/node_modules/
 *.svg
 *.txt
 **/.DS_Store
+**/__pycache__

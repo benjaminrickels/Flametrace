@@ -1,11 +1,10 @@
 import colorsys
-from operator import itemgetter
 
 import drawSvg as draw_svg
 
 import flametrace.exec_slice as exec_slice
-import flametrace.trace_entry as trace_entry
-from flametrace.util import groupby_sorted, ps_to_cycles
+import flametrace.tracefile.trace_entry as trace_entry
+from flametrace.util import groupby_sorted, max_key, min_key, ps_to_cycles, thread_uid_to_id
 
 SVG_X_SCALE = 100 * 1e3
 SVG_Y_UNIT = 100
@@ -44,35 +43,33 @@ def _thread_id_to_fill(thread_id):
     return f'#{int(255*r):02x}{int(255*g):02x}{int(255*b):02x}'
 
 
-def exec_slice_to_rectangle(exec_slice, begin):
-    depth = exec_slice.get('depth', -1) + 1
+def exec_slice_to_rectangle(slce, trace_begin):
+    depth = exec_slice.depth(slce, -1) + 1
 
-    thread_uid = exec_slice['thread_uid']
+    thread_uid = exec_slice.thread_uid(slce)
 
-    function_name = exec_slice.get('function_name', '')
+    function_name = exec_slice.function_name(slce, '')
     if function_name != '':
         function_name = f'{function_name}:'
 
-    slice_begin = exec_slice['begin']
-    slice_end = exec_slice['end']
+    slice_begin = exec_slice.begin(slce)
+    slice_end = exec_slice.end(slce)
     slice_duration = slice_end - slice_begin
 
-    x = (slice_begin - begin) / SVG_X_SCALE
+    x = (slice_begin - trace_begin) / SVG_X_SCALE
     y = depth*SVG_Y_UNIT
     width = (slice_duration) / SVG_X_SCALE
     height = SVG_Y_UNIT
-    fill = _thread_id_to_fill(trace_entry.to_id(thread_uid))
+    fill = _thread_id_to_fill(thread_uid_to_id(thread_uid))
 
-    thread_name = exec_slice.get('thread_name', '')
-    if thread_name != '':
-        thread_name = f' ({thread_name})'
+    thread_name = ''
 
     r = draw_svg.Rectangle(x, y, width, height, fill=fill, stroke='black', stroke_width='0.2')
 
-    s_type = exec_slice['type']
-    slice_id = exec_slice.get('slice_id', 'N/A')
-    parent = exec_slice.get('parent', 'N/A')
-    depth = exec_slice.get('depth', 'N/A')
+    s_type = exec_slice.type(slce)
+    slice_id = exec_slice.slice_id(slce)
+    parent = exec_slice.parent(slce, 'N/A')
+    depth = exec_slice.depth(slce, 'N/A')
     r.appendTitle(f'{function_name}{thread_uid}{thread_name}\n'
                   f'Type: {s_type}\n'
                   f'Begin: {slice_begin:,} ps\n'
@@ -86,23 +83,27 @@ def exec_slice_to_rectangle(exec_slice, begin):
 
 
 def to_svg(slices):
-    slices_by_cpu_id = groupby_sorted(slices, itemgetter('cpu_id')).items()
+    slices_by_cpu_id = groupby_sorted(slices, exec_slice.cpu_id).items()
     for cpu_id, cpu_slices in slices_by_cpu_id:
         if not cpu_slices:
             continue
 
-        begin = exec_slice.begin(min(cpu_slices, key=exec_slice.begin))
-        end = exec_slice.end(max(cpu_slices, key=exec_slice.end))
-        max_depth = exec_slice.depth(max(cpu_slices, key=exec_slice.depth))
+        trace_begin = min_key(cpu_slices, key=exec_slice.begin)
+        trace_end = max_key(cpu_slices, key=exec_slice.end)
+        max_depth = max_key(cpu_slices, key=lambda slce: exec_slice.depth(slce, -1))
 
-        duration = end - begin
+        trace_duration = trace_end - trace_begin
 
-        width = duration / SVG_X_SCALE
+        width = trace_duration / SVG_X_SCALE
+
+        # +1 because of the thread_slice,
+        # +1 because only one slice already needs at least 1 height,
+        # and +1 to have some space at the top
         height = (max_depth + 3) * SVG_Y_UNIT
 
         svg = draw_svg.Drawing(width, height)
 
         for slice in cpu_slices:
-            svg.append(exec_slice_to_rectangle(slice, begin))
+            svg.append(exec_slice_to_rectangle(slice, trace_begin))
 
         svg.saveSvg(f'flamegraph-core{cpu_id}.svg')

@@ -1,4 +1,3 @@
-from operator import itemgetter
 from flametrace.util import groupby_sorted, ps_to_cycles
 
 import flametrace.exec_slice as exec_slice
@@ -61,8 +60,8 @@ def _get_call_rt(call_slices):
 
     for cs in call_slices:
         rt += exec_slice.duration(cs)
-        has_begin = has_begin or ('is_begin' in cs)
-        has_end = has_end or ('is_end' in cs)
+        has_begin = has_begin or exec_slice.is_begin(cs)
+        has_end = has_end or exec_slice.is_end(cs)
 
     return rt if has_begin and has_end else None
 
@@ -79,7 +78,7 @@ def _get_functions_runtimes(slices_by_call_id):
 
     for _, call_slices in slices_by_call_id.items():
         if rt := _get_call_rt(call_slices):
-            fun_name = call_slices[0]['function_name']
+            fun_name = exec_slice.function_name(call_slices[0])
             _insert_function_runtime(fun_rts, fun_name, rt)
 
     return fun_rts
@@ -103,42 +102,9 @@ def _get_functions_stats(function_runtimes):
     return fun_stats
 
 
-def stringify_function_stats(fun_stats):
-    str_stats = []
-
-    for fun_name, stats in fun_stats.items():
-        count = stats['count']
-        total = stats['total']
-
-        median = stats['median']
-        min = stats['min']
-        max = stats['max']
-        q0 = stats['q0']
-        q1 = stats['q1']
-        q3 = stats['q3']
-        q4 = stats['q4']
-        iqr = stats['iqr']
-
-        stats_str = (f'{fun_name}:\n'
-                     f'  Count:  {count}\n'
-                     f'  Min:    {min}\n'
-                     f'  Q0:     {q0}\n'
-                     f'  Q1:     {q1}\n'
-                     f'  Median: {median}\n'
-                     f'  Q3:     {q3}\n'
-                     f'  Q4:     {q4}\n'
-                     f'  Max:    {max}\n'
-                     f'  IQR:    {iqr}\n'
-                     f'  Total:  {total}\n\n')
-
-        str_stats.append(stats_str)
-
-    return ''.join(str_stats)
-
-
 def get_function_stats(slices):
-    fun_slices = [x for x in slices if x['type'] == 'function_slice']
-    slices_by_call_id = groupby_sorted(fun_slices, key=itemgetter('call_id'))
+    fun_slices = [x for x in slices if exec_slice.type(x) == 'function_slice']
+    slices_by_call_id = groupby_sorted(fun_slices, key=exec_slice.call_id)
 
     fun_rts = _get_functions_runtimes(slices_by_call_id)
     fun_stats = _get_functions_stats(fun_rts)

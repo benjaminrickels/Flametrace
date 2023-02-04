@@ -1,6 +1,4 @@
-import flametrace.trace_entry as trace_entry
-from flametrace.preemption_info import find_preempted, find_preempting
-from flametrace.util import flatten
+import flametrace.tracefile.trace_entry as trace_entry
 
 ##############################
 # Finding continuous sequences
@@ -20,7 +18,7 @@ def _init_cpu_seq(entry, preempted=None):
 
 
 def _preempt_seq(entry, cpu_seq, cont_seqs):
-    preempted = cpu_seq['entries'][-1]
+    preempted = last(cpu_seq)
     cpu_seq['preempted_by'] = entry
     cont_seqs.append(cpu_seq)
 
@@ -41,7 +39,7 @@ def _process_entry_with_seq(entry, cpu_seq, cont_seqs):
 
 
 def _process_entry(entry, cont_seqs, cpu_seqs):
-    cpu_id = entry['cpu_id']
+    cpu_id = trace_entry.cpu_id(entry)
 
     cpu_seq = cpu_seqs.get(cpu_id, None)
 
