@@ -97,6 +97,7 @@ def _get_functions_stats(function_runtimes):
 
         fun_stats[fun_name] = {'count': count,
                                'total': ps_to_cycles(total),
+                               'avg': ps_to_cycles(total/count),
                                **boxplot_stats}
 
     return fun_stats
