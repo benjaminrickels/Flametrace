@@ -39,7 +39,7 @@ def _boxplot_stats(runtimes):
     q3 = _median(xs_high, q2)
     iqr = q3 - q1
 
-    filtered_rts = [x for x in runtimes if x >= (q1 - iqr) and (x <= q3 + iqr)]
+    filtered_rts = [x for x in runtimes if x >= (q1 - 1.5*iqr) and (x <= q3 + 1.5*iqr)]
     q0 = filtered_rts[0]
     q4 = filtered_rts[-1]
 
