@@ -54,18 +54,6 @@ def _boxplot_stats(runtimes):
             'iqr': ps_to_cycles(iqr)}
 
 
-def _get_call_rt(call_slices):
-    has_begin = has_end = False
-    rt = 0
-
-    for cs in call_slices:
-        rt += exec_slice.duration(cs)
-        has_begin = has_begin or exec_slice.is_begin(cs)
-        has_end = has_end or exec_slice.is_end(cs)
-
-    return rt if has_begin and has_end else None
-
-
 def _insert_function_runtime(fun_rts, fun_name, rt):
     if not fun_name in fun_rts:
         fun_rts[fun_name] = []
@@ -77,9 +65,9 @@ def _get_functions_runtimes(slices_by_call_id):
     fun_rts = {}
 
     for _, call_slices in slices_by_call_id.items():
-        if rt := _get_call_rt(call_slices):
-            fun_name = exec_slice.function_name(call_slices[0])
-            _insert_function_runtime(fun_rts, fun_name, rt)
+        rt = sum(map(exec_slice.duration, call_slices))
+        fun_name = exec_slice.function_name(call_slices[0])
+        _insert_function_runtime(fun_rts, fun_name, rt)
 
     return fun_rts
 
@@ -103,11 +91,22 @@ def _get_functions_stats(function_runtimes):
     return fun_stats
 
 
+def _filter_complete_calls(slices_by_call_id):
+    complete_calls = {}
+    for id, slices in slices_by_call_id.items():
+        has_begin = any(map(exec_slice.is_begin, slices))
+        has_end = any(map(exec_slice.is_end, slices))
+        if has_begin and has_end:
+            complete_calls[id] = slices
+    return complete_calls
+
+
 def get_function_stats(slices):
     fun_slices = [x for x in slices if exec_slice.type(x) == 'function_slice']
     slices_by_call_id = groupby_sorted(fun_slices, key=exec_slice.call_id)
+    complete_calls = _filter_complete_calls(slices_by_call_id)
 
-    fun_rts = _get_functions_runtimes(slices_by_call_id)
+    fun_rts = _get_functions_runtimes(complete_calls)
     fun_stats = _get_functions_stats(fun_rts)
 
     return fun_stats
