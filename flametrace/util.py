@@ -11,11 +11,15 @@ def groupby_sorted(coll, key=None, sort_key=None, group_key=None):
                                                     key=group_key or key)])
 
 
-def min_key(coll, key):
+def min_key(coll, key, default=None):
+    if not coll:
+        return default
     return key(min(coll, key=key))
 
 
-def max_key(coll, key):
+def max_key(coll, key, default=None):
+    if not coll:
+        return default
     return key(max(coll, key=key))
 
 
@@ -27,8 +31,12 @@ def cycles_to_ps(cycles):
     return (cycles * 1000) / config.CPU_GHZ
 
 
+def thread_id_to_uid(thread_id, cpu_id):
+    return str(thread_id) if thread_id != 0 else f'swapper/{cpu_id}'
+
+
 def thread_uid_to_id(thread_uid):
-    if isinstance(thread_uid, str):
+    try:
+        return int(thread_uid)
+    except ValueError:
         return 0
-    else:
-        return thread_uid
