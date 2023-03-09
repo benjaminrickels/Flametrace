@@ -151,7 +151,7 @@ def _compute_thread_stats(thread_slices, trace_stats):
             cpus_active_time = trace_stats['cpus-active-time']
             active_time_to_cpus_active_time_perc = 100 * (active_time / cpus_active_time)
         else:
-            active_time_to_cpus_active_time_perc = "N/A"
+            active_time_to_cpus_active_time_perc = 'N/A'
 
         thread_stats[thread_uid] = {'begin': begin,
                                     'end': end,
@@ -225,6 +225,8 @@ SCHED_FUNS = ['schedule', 'scheduler_tick']
 def _compute_scheduling_stats(per_call_stats, function_stats, calls):
     calls_by_id = {c.id: c for c in calls}
 
+    sched_active_time = 0
+    sched_traced_active_time = 0
     sched_funs_stats = {}
     pcss_by_call_name = groupby_sorted(per_call_stats, lambda pcs: pcs['name'])
     for sched_fun in SCHED_FUNS:
@@ -253,18 +255,38 @@ def _compute_scheduling_stats(per_call_stats, function_stats, calls):
                 sched_funs_stats[sched_fun]['traced-active-time'] = traced_active_time
                 sched_funs_stats[sched_fun]['traced-active-time-perc'] = traced_active_time_perc
 
+                sched_active_time += active_time
+
+            sched_traced_active_time += traced_active_time
+
+    sched_traced_active_time_perc = 100 * \
+        (sched_traced_active_time / sched_active_time) if sched_active_time else 'N/A'
+
     sched_class_funs_stats = {}
     for sched_class, class_funs in SCHED_CLASSES.items():
-        class_funs_stats = list(filter(lambda t: t[1],
-                                       map(lambda n: (n, function_stats.get(n)),
-                                           class_funs)))
+        class_funs_stats = []
+        for fun_name in class_funs:
+            if fun_stats := function_stats.get(fun_name):
+                active_time = fun_stats['active-time']
+                active_time_to_sched_active_time_perc = 100 * (active_time / sched_active_time)
+                active_time_to_traced_sched_active_time_perc = 100 * \
+                    (active_time / sched_traced_active_time)
+
+                fun_stats = dict(fun_stats)
+                fun_stats['active-time-to-sched-active-time_perc'] = active_time_to_sched_active_time_perc
+                fun_stats['active-time-to-traced-sched-active-time_perc'] = active_time_to_traced_sched_active_time_perc
+
+                class_funs_stats.append((fun_name, fun_stats))
 
         class_funs_stats_sorted = sorted(class_funs_stats,
                                          key=lambda t: t[1]['active-time-self'],
                                          reverse=True)
         sched_class_funs_stats[sched_class] = class_funs_stats_sorted
 
-    return {'schedule-functions-stats': sched_funs_stats,
+    return {'sched-active-time': sched_active_time,
+            'sched-traced-active-time': sched_traced_active_time,
+            'sched-traced-active-time-perc': sched_traced_active_time_perc,
+            'schedule-functions-stats': sched_funs_stats,
             'class-function-stats': sched_class_funs_stats}
 
 
