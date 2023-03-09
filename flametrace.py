@@ -81,7 +81,7 @@ def main():
         if args.stats:
             stats_ = stats.compute_stats(slices)
             for stat_group, group_stats in stats_.items():
-                with open(f'{stat_group}-stats.json', 'w') as sf:
+                with open(f'stats-{stat_group}.json', 'w') as sf:
                     json.dump(group_stats, sf, indent=4)
 
         if args.fg_d3:
