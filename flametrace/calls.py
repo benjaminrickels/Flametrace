@@ -17,7 +17,7 @@ def _children(call_slices, slices_map):
     return children
 
 
-def _from_call_slices(call_id, call_slices, slices_map):
+def _from_call_slices(call_id, call_slices, slices_map, parent_ids, children_ids):
     first = call_slices[0]
     last = call_slices[-1]
 
@@ -32,10 +32,11 @@ def _from_call_slices(call_id, call_slices, slices_map):
                 first.thread_uid)
 
     if parent := _parent(first.parent, slices_map):
-        call.parent = parent
+        parent_ids[call_id] = parent
 
+    children_ids[call_id] = []
     if children := _children(call_slices, slices_map):
-        call.children = list(children)
+        children_ids[call_id] = list(children)
 
     return call
 
@@ -44,10 +45,19 @@ def all_from_slices(call_slices):
     slices_grouped_by_call_id = groupby_sorted(call_slices, key=lambda s: s.call_id)
     slices_map = {s.id: s for s in call_slices}
 
-    calls = []
+    calls = {}
+    parent_ids = {}
+    children_ids = {}
 
     for call_id, call_slices_ in slices_grouped_by_call_id.items():
-        call = _from_call_slices(call_id, call_slices_, slices_map)
-        calls.append(call)
+        call = _from_call_slices(call_id, call_slices_, slices_map, parent_ids, children_ids)
+        calls[call_id] = call
 
-    return calls
+    for call_id, call in calls.items():
+        if (parent_id := parent_ids.get(call_id)) is not None:
+            call.parent = calls[parent_id]
+
+        children = map(lambda id: calls[id], children_ids[call_id])
+        call.children = list(children)
+
+    return calls.values()

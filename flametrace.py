@@ -63,6 +63,8 @@ def main():
         config.CPU_GHZ = cpu_ghz
     if ignored_funs := args.ignored_funs:
         config.IGNORED_FUNS = ignored_funs
+    if args.no_trace_convert_to_cycles:
+        config.TRACE_CONVERT_TO_CYCLES = False
 
     with open(args.tracefile) as tf:
         events = tracefile.parse(tf, filter_pre_m5=not args.no_filter_pre_m5)
@@ -77,9 +79,10 @@ def main():
                                        benchmark_events)
 
         if args.stats:
-            s = stats.compute_stats(slices)
-            with open('stats.json', 'w') as sf:
-                json.dump(s, sf, indent=4)
+            stats_ = stats.compute_stats(slices)
+            for stat_group, group_stats in stats_.items():
+                with open(f'{stat_group}-stats.json', 'w') as sf:
+                    json.dump(group_stats, sf, indent=4)
 
         if args.fg_d3:
             d3.to_json(slices)

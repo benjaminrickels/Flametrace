@@ -11,32 +11,6 @@ class Call:
         self._name = name
         self._thread_uid = thread_uid
 
-    def children_list(self, call_map):
-        if (children_ := getattr(self, '_children_list', None)) is not None:
-            return children_
-
-        children_ = []
-        for child in self.children:
-            if child_call := call_map.get(child, None):
-                children_.append(child_call)
-
-        setattr(self, '_children_list', children_)
-
-        return children_
-
-    def successors_list(self, call_map):
-        if (successors_ := getattr(self, '_successors_list', None)) is not None:
-            return successors_
-
-        successors_ = []
-        for child in self.children_list(call_map):
-            successors_.append(child.successors_list(call_map))
-
-        successors_ = flatten(successors_)
-        setattr(self, '_successors_list', successors_)
-
-        return successors_
-
     ################################################################################################
     # Properties
     ################################################################################################
@@ -44,6 +18,10 @@ class Call:
     @property
     def active_time(self):
         return self._active_time
+
+    @property
+    def active_time_self(self):
+        return self.active_time - self.children_active_time
 
     @property
     def begin(self):
@@ -65,6 +43,16 @@ class Call:
     def children(self, val):
         if val:
             setattr(self, '_children', val)
+            setattr(self, '_children_active_time', sum(map(lambda c: c.active_time, val)))
+            setattr(self, '_children_duration', sum(map(lambda c: c.duration, val)))
+
+    @property
+    def children_active_time(self):
+        return getattr(self, '_children_active_time', 0)
+
+    @property
+    def children_duration(self):
+        return getattr(self, '_children_duration', 0)
 
     @property
     def is_complete(self):
@@ -86,6 +74,20 @@ class Call:
     def parent(self, val):
         if val is not None:
             setattr(self, '_parent', val)
+
+    @property
+    def successors(self):
+        if (successors_ := getattr(self, '_successors', None)) is not None:
+            return successors_
+
+        successors_ = []
+        for child in self.children:
+            successors_.append(child)
+            successors_.extend(child.successors)
+
+        setattr(self, '_successors', successors_)
+
+        return successors_
 
     @property
     def thread_uid(self):
