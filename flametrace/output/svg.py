@@ -9,14 +9,20 @@ MAJOR_HEIGHT = 15
 TEXT_HEIGHT = 60
 Y_OFFSET = MAJOR_HEIGHT + TEXT_HEIGHT + 15
 
+FIXED_COLORS = config.COLORS['fixed']
+RANDOM_COLORS = config.COLORS['random']
+
 
 def _thread_id_to_fill(thread_id):
+    if color := FIXED_COLORS.get(thread_id):
+        return color
+
     if thread_id == 0:
         return '#404040'
     elif thread_id < 1000:
         return '#C0C0C0'
     else:
-        return config.COLORS[(thread_id - 1000) % len(config.COLORS)]
+        return RANDOM_COLORS[(thread_id - 1000) % len(RANDOM_COLORS)]
 
 
 def _call_slice_infos(slce):
