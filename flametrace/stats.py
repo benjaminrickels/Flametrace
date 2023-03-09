@@ -124,7 +124,7 @@ def _compute_function_stats(per_call_stats, trace_stats):
     return function_stats
 
 
-def _compute_thread_stats(thread_slices):
+def _compute_thread_stats(thread_slices, trace_stats):
     thread_slices_by_thread_uid = groupby_sorted(thread_slices,
                                                  key=lambda s: str(s.thread_uid))
 
@@ -144,11 +144,22 @@ def _compute_thread_stats(thread_slices):
 
         slice_duration_quartiles = _quartile_stats(slice_durations)
 
+        total_cpu_time = trace_stats['total-cpu-time']
+        active_time_to_total_cpu_time_perc = 100 * (active_time / total_cpu_time)
+
+        if thread_uid_to_id(thread_uid) != 0:
+            cpus_active_time = trace_stats['cpus-active-time']
+            active_time_to_cpus_active_time_perc = 100 * (active_time / cpus_active_time)
+        else:
+            active_time_to_cpus_active_time_perc = "N/A"
+
         thread_stats[thread_uid] = {'begin': begin,
                                     'end': end,
                                     'duration': duration,
                                     'active_time': active_time,
                                     'active_time_perc': active_perc,
+                                    'active-time-to-total-cpu-time-perc': active_time_to_total_cpu_time_perc,
+                                    'active-time-to-cpus-active-time_perc': active_time_to_cpus_active_time_perc,
                                     'migrations': migrations,
                                     'slice_duration_quartiles': slice_duration_quartiles}
 
@@ -316,5 +327,5 @@ def compute_stats(slices):
     return {'function': function_stats,
             'per-call': per_call_stats,
             'scheduling': scheduling_stats,
-            'thread': _compute_thread_stats(thread_slices),
+            'thread': _compute_thread_stats(thread_slices, trace_stats),
             'trace': trace_stats}
