@@ -222,7 +222,7 @@ TRACED_SCHED_CLASSES_FUNS = flatten([funs for funs in SCHED_CLASSES.values()])
 SCHED_FUNS = ['schedule', 'scheduler_tick']
 
 
-def _compute_scheduling_stats(per_call_stats, function_stats, calls):
+def _compute_scheduling_stats(per_call_stats, function_stats, trace_stats, calls):
     calls_by_id = {c.id: c for c in calls}
 
     sched_active_time = 0
@@ -262,6 +262,10 @@ def _compute_scheduling_stats(per_call_stats, function_stats, calls):
     sched_traced_active_time_perc = 100 * \
         (sched_traced_active_time / sched_active_time) if sched_active_time else 'N/A'
 
+    cpus_active_time = trace_stats['cpus-active-time']
+    sched_traced_active_time_to_cpus_active_time_perc = 100 * \
+        (sched_traced_active_time / cpus_active_time)
+
     sched_class_funs_stats = {}
     for sched_class, class_funs in SCHED_CLASSES.items():
         class_funs_stats = []
@@ -286,6 +290,7 @@ def _compute_scheduling_stats(per_call_stats, function_stats, calls):
     return {'sched-active-time': sched_active_time,
             'sched-traced-active-time': sched_traced_active_time,
             'sched-traced-active-time-perc': sched_traced_active_time_perc,
+            'sched-traced-active-time-to-cpus-active-time-perc': sched_traced_active_time_to_cpus_active_time_perc,
             'schedule-functions-stats': sched_funs_stats,
             'class-function-stats': sched_class_funs_stats}
 
@@ -341,8 +346,10 @@ def compute_stats(slices):
     per_call_stats = _compute_per_call_stats(calls_)
     trace_stats = _compute_trace_stats(slices)
     function_stats = _compute_function_stats(per_call_stats, trace_stats)
-    scheduling_stats = _compute_scheduling_stats(
-        per_call_stats, function_stats, calls_)
+    scheduling_stats = _compute_scheduling_stats(per_call_stats,
+                                                 function_stats,
+                                                 trace_stats,
+                                                 calls_)
 
     thread_slices = [s for s in slices if s.is_thread_slice]
 
