@@ -166,9 +166,9 @@ def _get_limit_from_to(slices, limit, limit_context, benchmark_events):
     if limit_type_to == 'slice':
         limit_to = _find_first_by(slices_rev, lambda s: s.id, limit_value_to).end
     if limit_type_from == 'thread':
-        limit_from = _find_first_by(slices, lambda s: s.thread_uid, limit_value_from).begin
+        limit_from = _find_first_by(slices, lambda s: s.thread_uid, str(limit_value_from)).begin
     if limit_type_to == 'thread':
-        limit_to = _find_first_by(slices_rev, lambda s: s.thread_uid, limit_value_to).end
+        limit_to = _find_first_by(slices_rev, lambda s: s.thread_uid, str(limit_value_to)).end
 
     limit_from_to_delta = limit_to - limit_from
     limit_from = limit_from - 0.01 * limit_context * limit_from_to_delta

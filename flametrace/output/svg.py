@@ -155,13 +155,13 @@ def _draw_axis(svg, trace_duration, x_factor):
     _draw_axis_ticks(svg, trace_duration, x_factor, axis_step)
 
 
-def _per_cpu_fg_to_svg(slices_by_cpu_id, width, height):
+def _per_cpu_fg_to_svg(slices, slices_by_cpu_id, width, height):
     for cpu_id, cpu_slices in slices_by_cpu_id.items():
         if not cpu_slices:
             continue
 
-        trace_begin = min_key(cpu_slices, key=lambda s: s.begin)
-        trace_end = max_key(cpu_slices, key=lambda s: s.end)
+        trace_begin = min_key(slices, key=lambda s: s.begin)
+        trace_end = max_key(slices, key=lambda s: s.end)
         max_depth = max_key(cpu_slices, key=lambda s: s.call_depth_or(-1))
 
         trace_duration = trace_end - trace_begin
@@ -208,5 +208,5 @@ def to_svg(slices, width, height):
     height = max(height, Y_OFFSET + 200)
 
     slices_by_cpu_id = groupby_sorted(slices, lambda s: s.cpu_id)
-    _per_cpu_fg_to_svg(slices_by_cpu_id, width, height)
+    _per_cpu_fg_to_svg(slices, slices_by_cpu_id, width, height)
     _thread_activity_to_svg(slices, slices_by_cpu_id, width, height)
