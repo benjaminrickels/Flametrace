@@ -13,9 +13,11 @@ FIXED_COLORS = config.COLORS['fixed']
 RANDOM_COLORS = config.COLORS['random']
 
 
-def _thread_id_to_fill(thread_id):
-    if color := FIXED_COLORS.get(thread_id):
+def _thread_uid_to_fill(thread_uid):
+    if color := FIXED_COLORS.get(thread_uid):
         return color
+
+    thread_id = thread_uid_to_id(thread_uid)
 
     if thread_id == 0:
         return '#404040'
@@ -73,7 +75,7 @@ def exec_slice_to_rectangle(slce, trace_begin, slice_x_factor, y, slice_height):
 
     x = (slice_begin - trace_begin) * slice_x_factor
     width = (slice_duration) * slice_x_factor
-    fill = _thread_id_to_fill(thread_uid_to_id(thread_uid))
+    fill = _thread_uid_to_fill(thread_uid)
 
     slice_info = _slice_info(slce)
 
