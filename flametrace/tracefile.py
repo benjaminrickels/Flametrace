@@ -65,9 +65,9 @@ def benchmark_events(trace_events):
         if te.type != 'trace_info':
             continue
 
-        thread_info = te.info
-        if thread_info in EVENT_MAP.keys():
-            e = EVENT_MAP[thread_info]
+        trace_info = te.info
+        if trace_info in EVENT_MAP.keys():
+            e = EVENT_MAP[trace_info]
             events[e] = te.timestamp
 
     return events
