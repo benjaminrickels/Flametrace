@@ -46,7 +46,7 @@ def _setup_parser():
                               help='height of the SVG flamegraph (in pixels)')
 
     output_group.add_argument('--stats', action='store_true',
-                              help='generate a JSON file containing stats')
+                              help='generate JSON files containing stats')
 
     return parser
 

@@ -1,5 +1,12 @@
+# Default CPU frequency in GHz
 CPU_GHZ = 2.0
+
+# Default functions that should be ignored when building the flamegraph
 IGNORED_FUNS = ['registerThread', 'unregisterThread', 'start_pthread']
+
+# Colors for SVG generation.
+# 'fixed' is a map from thread_uid to hex color
+# 'random' is an array of colors that can be chosen from randomly (must not be empty)
 COLORS = {'fixed': {},
           'random': ['#622500',
                      '#6d3ae6',
@@ -65,4 +72,7 @@ COLORS = {'fixed': {},
                      '#ffcba0',
                      '#859471',
                      '#ffb99b']}
+
+# Change the default for the option --no-trace-convert-to-cycles, so it does not
+# have to be specified each time
 TRACE_CONVERT_TO_CYCLES = True
