@@ -283,13 +283,17 @@ def _compute_scheduling_stats(function_stats, trace_stats):
 
             sched_funs_stats[sched_fun] = fun_stats
 
-    sched_funs_stats_sorted = sorted(sched_funs_stats.items(),
-                                     key=lambda s: s[1]['active-time-self'],
-                                     reverse=True)
+    sched_funs_stats_by_active_time_self = sorted(sched_funs_stats.items(),
+                                                  key=lambda s: s[1]['active-time-self'],
+                                                  reverse=True)
+    sched_funs_stats_by_active_time_self_median = sorted(sched_funs_stats.items(),
+                                                         key=lambda s: s[1]['active-time-self-iqr']['median'],
+                                                         reverse=True)
 
     return {'sched-active-time-self': sched_active_time_self,
             'sched-active-time-self-to-cpus-active-time-perc': sched_active_time_self_to_cpus_active_time_perc,
-            'sched-funs-stats': sched_funs_stats_sorted}
+            'sched-funs-stats-by-active-time-self': sched_funs_stats_by_active_time_self,
+            'sched-funs-stats-by-active-time-self-median': sched_funs_stats_by_active_time_self_median}
 
 
 def _is_non_swapper_thread_slice(slce):
