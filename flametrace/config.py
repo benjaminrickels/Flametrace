@@ -2,7 +2,8 @@
 CPU_GHZ = 2.0
 
 # Default functions that should be ignored when building the flamegraph
-IGNORED_FUNS = ['registerThread', 'unregisterThread', 'start_pthread', 'requeue_task_rt']
+IGNORED_FUNS = ['registerThread', 'unregisterThread',
+                'start_pthread', 'requeue_task_rt', 'get_event']
 
 # Colors for SVG generation.
 # 'fixed' is a map from thread_uid to hex color

@@ -194,7 +194,11 @@ FAIR_SCHED_FUNS = ['enqueue_task_fair',
                    '__dequeue_entity',
                    'pick_next_entity',
                    'put_prev_entity',
-                   'set_next_entity']
+                   'set_next_entity',
+                   'update_curr',
+                   'check_preempt_tick',
+                   'entity_tick',
+                   'place_entity']
 RT_SCHED_FUNS = ['enqueue_task_rt',
                  'dequeue_task_rt',
                  'yield_task_rt',
@@ -266,6 +270,7 @@ def _compute_scheduling_stats(function_stats, trace_stats):
         (sched_active_time_self / cpus_active_time)
 
     sched_funs_stats = {}
+    sched_class_stats = {c: 0 for c in SCHED_CLASS_FUNS.keys()}
     for sched_fun in SCHED_FUNS:
         if fun_stats := function_stats.get(sched_fun):
             fun_stats = dict(fun_stats)
@@ -278,6 +283,8 @@ def _compute_scheduling_stats(function_stats, trace_stats):
             sched_class = None
             for sched_class_, funs in SCHED_CLASS_FUNS.items():
                 if sched_fun in funs:
+                    sched_class_stats[sched_class_] += active_time_self
+
                     sched_class = sched_class_
             fun_stats['sched-class'] = sched_class
 
@@ -290,8 +297,14 @@ def _compute_scheduling_stats(function_stats, trace_stats):
                                                          key=lambda s: s[1]['active-time-self-iqr']['median'],
                                                          reverse=True)
 
+    sched_class_stats = {c: {'active_time_self': t,
+                             'active_time_self_to_sched_active_time_self_perc': 100 * (
+                                 t / sched_active_time_self)}
+                         for c, t in sched_class_stats.items()}
+
     return {'sched-active-time-self': sched_active_time_self,
             'sched-active-time-self-to-cpus-active-time-perc': sched_active_time_self_to_cpus_active_time_perc,
+            'sched-class-stats': sched_class_stats,
             'sched-funs-stats-by-active-time-self': sched_funs_stats_by_active_time_self,
             'sched-funs-stats-by-active-time-self-median': sched_funs_stats_by_active_time_self_median}
 
