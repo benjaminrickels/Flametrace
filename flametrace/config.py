@@ -3,7 +3,13 @@ CPU_GHZ = 2.0
 
 # Default functions that should be ignored when building the flamegraph
 IGNORED_FUNS = ['registerThread', 'unregisterThread',
-                'start_pthread', 'requeue_task_rt', 'get_event']
+                'start_pthread',
+                'requeue_task_rt',
+                'get_event', 'send_event',
+                'signal_que_enq', 'signal_que_enq_data', 'signal_que_enq_notify',
+                'signal_que_deq', 'signal_que_deq_data', 'signal_que_deq_notify',
+                'pool_allocate_message', 'pool_free_message',
+                'pool_read_message', 'pool_write_message']
 
 # Colors for SVG generation.
 # 'fixed' is a map from thread_uid to hex color
