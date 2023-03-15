@@ -16,14 +16,6 @@ python -m pip install -r requirements.txt
 As per usual the option `-h|--help` can be used to show some basic usage information.
 Some more information regarding some of the options:
 
-* `--ignored-funs IGNORED_FUNS`:
-  Can be used to ignore some functions when generating the flamegraphs.
-  Useful for buggy/missing `INST_TP_FUNC_ENTRY` and `INST_TP_FUNC_EXIT` tracepoints.
-  `IGNORED_FUNS` should be a JSON list
-  (i.e. with `'`s for names)
-  of function/tracepoint names,
-  that should be ignored.
-
 * `--limit LIMIT`:
   Can be used to limit the region that should be analyzed/plotted by  `flametrace`.
   Its argument `LIMIT` is of the form `<begin>:<end>` and specifies the begin and end of the region.
