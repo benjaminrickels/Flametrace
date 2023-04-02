@@ -10,7 +10,6 @@ import flametrace.limit as Limit
 
 import json
 import os
-import shutil
 import pickle
 
 
@@ -36,7 +35,7 @@ def _setup_parser():
     parser.add_argument('--no-trace-convert-to-cycles', action='store_true', default=False,
                         help=('do not convert timestamps (in the tracefile) to cycles and keep them in picoseconds'
                               '(defaults can be configured in flametrace/config.py)'))
-    parser.add_argument('--ignore-cache', action='store_true', default=False,
+    parser.add_argument('--reset-cache', action='store_true', default=False,
                         help='Ignore cached slices')
     parser.add_argument('--throw', action='store_true', default=False,
                         help=('When specified and more than one tracefile is specified, throw and exit the program at'
@@ -95,7 +94,7 @@ def _try_save_cached(benchmark_events, slices):
 
 
 def _compute_slices(tf, args):
-    if not (args.no_cache or args.ignore_cache):
+    if not args.reset_cache:
         print('INFO: No cached slices found')
 
     print('INFO: Parsing tracefile')
@@ -107,14 +106,13 @@ def _compute_slices(tf, args):
     print('INFO: Building slices')
     slices = exec_slices.find_all(events)
 
-    if not args.no_cache:
-        _try_save_cached(benchmark_events, slices)
+    _try_save_cached(benchmark_events, slices)
 
     return (benchmark_events, slices)
 
 
 def _get_slices(tf, args):
-    cached = None if args.no_cache or args.ignore_cache else _try_load_cached()
+    cached = None if args.reset_cache else _try_load_cached()
 
     if not cached:
         return _compute_slices(tf, args)

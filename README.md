@@ -1,7 +1,7 @@
 # Flametrace
 
 Flametrace can generate per-core thread and function exectution flamegraph SVGs,
-a thread activity SVG, and runtime statistics from a gem5 `Trace.txt` file.
+an SVG thread activity diagram, and runtime statistics from a gem5 `Trace.txt` file.
 
 ## Prerequisites and Dependencies
 
@@ -52,6 +52,29 @@ Some more information regarding some of the options:
 * `--no-trace-convert-to-cycles`:
   Do not convert the timestamps in the `Trace.txt` from picoseconds into cycles when parsing it.
   By default, `--cpu-ghz` (or its default value) will be used for the conversion.
+
+* `--reset-cache`:
+  When running, `flametrace` caches all slices (*before* applying any `--limit`s) for a tracefile to allow for faster subsequent generating of flamegraphs and statistics.
+  If you do not want to use these cached slices (for example, because the tracefile has changed), you can use this option to force regeneration.
+
+## Examples
+
+1. Process the file `Trace.txt`, generating an SVG flamegraph and thread activity diagram
+
+    `python3 flametrace.py --fg-svg`
+
+2. Process the file `Trace2.txt`, generating an SVG flamegraph and thread activity diagram that spans only the region of interest
+
+    `python3 flametrace.py Trace2.txt --fg-svg --limit roi`
+
+3. Process multiple tracefiles (all beginning with the prefix "`Trace`"), generating an SVG flamegraph, thread activity diagram and statistical information that spans from the beginning of the ROI to the end of the trace
+
+    `python3 flametrace.py Trace* --fg-svg --stats --limit roi:`
+
+4. Process the file `Trace.txt`, generating an SVG flamegraph and thread activity diagram that spans just one slice from the flamegraph/activity diagram generated in example 1
+
+    `python3 flametrace.py --fg-svg --limit <slice-id-as-seen-in-svg>s`
+
 
 ## Further Configuration
 
